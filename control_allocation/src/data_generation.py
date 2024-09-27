@@ -1,5 +1,3 @@
-from time import time
-
 import numpy as np
 import torch
 
@@ -34,6 +32,7 @@ def B(vector):
   f3 = vector[3]
   a3 = torch.deg2rad(vector[4])
 
+  # Dimensions from thruster layout of vessel (paper fig 2(b))
   l1 = -14
   l2 = 14.5
   l3 = -2.7
@@ -42,6 +41,7 @@ def B(vector):
   B = torch.tensor([[0, torch.cos(a2), torch.cos(a3)],
                       [1, torch.sin(a2), torch.sin(a3)],
                       [l2, l1*torch.sin(a2)  - l3*torch.cos(a2), l1*torch.sin(a3) - l4*torch.cos(a3)]])
+
   return B
 
 def tau(vector):
@@ -52,21 +52,19 @@ def tau(vector):
 
   return tau
 
-n = 1
 
-t1 = time()
+# Generate input data
+
+n = 4
 u_tensor = generate_random_tensor(n)
-t2 = time()
 
 tau_tensor = torch.zeros((n, 3))
 
 for (i, vector) in enumerate(u_tensor):
     tau_tensor[i] = tau(vector).squeeze()
 
-t3 = time()
 
 print(u_tensor.shape)
 print(tau_tensor.shape)
-print(t2 - t1, t3 - t2)
 
 torch.save({"u_tensor": u_tensor, "tau_tensor": tau_tensor}, "input_data.pt")
