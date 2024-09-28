@@ -1,5 +1,8 @@
+import sys
+
 import numpy as np
 import torch
+from sklearn.model_selection import train_test_split
 
 torch.manual_seed(42)
 torch.set_printoptions(sci_mode=False)
@@ -52,19 +55,54 @@ def tau(vector):
 
   return tau
 
+def main(n=10000, train_split=0.8):
+  u_tensor = generate_random_tensor(n)
 
-# Generate input data
+  tau_tensor = torch.zeros((n, 3))
 
-n = 4
-u_tensor = generate_random_tensor(n)
-
-tau_tensor = torch.zeros((n, 3))
-
-for (i, vector) in enumerate(u_tensor):
-    tau_tensor[i] = tau(vector).squeeze()
+  for (i, vector) in enumerate(u_tensor):
+      tau_tensor[i] = tau(vector).squeeze()
 
 
-print(u_tensor.shape)
-print(tau_tensor.shape)
+  # Standardize input data
+  mean = tau_tensor.mean(dim=0)
+  std = tau_tensor.std(dim=0)
 
-torch.save({"u_tensor": u_tensor, "tau_tensor": tau_tensor}, "input_data.pt")
+  # Perform standardization: (input - mean) / std
+  std_tau_tensor = (tau_tensor - mean) / std
+
+  std_tau_tensor_train,std_tau_tensor_test = train_test_split(std_tau_tensor, train_size = train_split)
+
+  torch.save({"std_tau_tensor_train": std_tau_tensor_train, "std_tau_tensor_test": std_tau_tensor_test}, "data.pt")
+
+  print("Training data size: ", std_tau_tensor_train.shape, "\n Testing data size: ", std_tau_tensor_test.shape)
+
+
+if __name__ == "__main__":
+    # Set default values
+    default_n = 10000
+    default_train_split = 0.8
+
+    try:
+        # Check if the user provided an argument for n
+        if len(sys.argv) > 1:
+            n = int(sys.argv[1])  # Convert the first argument to an integer
+        else:
+            n = default_n  # Use default value for n
+        
+        # Check if the user provided an argument for train_split
+        if len(sys.argv) > 2:
+            train_split = float(sys.argv[2])  # Convert the second argument to a float
+            if not (0 <= train_split <= 1):
+                raise ValueError("train_split should be a float between 0 and 1.")
+        else:
+            train_split = default_train_split  # Use default value for train_split
+
+        # Call the main function with either user-provided or default values
+        main(n, train_split)
+
+    except ValueError:
+        print("Please provide a valid integer for 'n' and a valid float for 'train_split'.")
+
+
+

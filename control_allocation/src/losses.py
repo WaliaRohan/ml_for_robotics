@@ -1,8 +1,9 @@
 import torch
 import torch.nn as nn
 
+from data_generation import tau
 
-# OLEG
+
 def L0(predicted_u, ground_truth_tau):
 
     y = ground_truth_tau
@@ -17,7 +18,6 @@ def L0(predicted_u, ground_truth_tau):
 
     return loss
 
-# OLEG
 def L0_batch(batch_predicted_u, batch_ground_truth_tau):
 
     total_loss = 0
@@ -29,7 +29,6 @@ def L0_batch(batch_predicted_u, batch_ground_truth_tau):
 
     return total_loss
 
-# OLEG
 def L1_batch(batch_predicted_tau, batch_ground_truth_tau):
 
     loss_fn = nn.MSELoss()  # Mean Square Error
@@ -95,10 +94,10 @@ def L5(u):
     mask_a_1_u = (u[:, 2] > forbidden_sector_upper[0]) & (u[:, 2] < forbidden_sector_upper[1])
     mask_a_2_u = (u[:, 4] > forbidden_sector_upper[0]) & (u[:, 4] < forbidden_sector_upper[1])
 
-    print(mask_a_1_l)
-    print(mask_a_2_l)
-    print(mask_a_1_u)
-    print(mask_a_2_u)
+    # print(mask_a_1_l)
+    # print(mask_a_2_l)
+    # print(mask_a_1_u)
+    # print(mask_a_2_u)
 
     L5_lower = sum(mask_a_1_l) + sum(mask_a_2_l)
     L5_upper = sum(mask_a_1_u) + sum(mask_a_2_u)
@@ -131,7 +130,7 @@ def combined_loss(batch_predicted_u, batch_predicted_tau, batch_ground_truth_tau
     # print(f"Loss effect 2: {loss_effect2}")
     # print(f"Loss effect 3: {loss_effect3}")
     # print(f"Loss effect 4: {loss_effect4}")
-    # # print(f"Loss effect 5: {loss_effect5}")
+    # print(f"Loss effect 5: {loss_effect5}")
 
     combined_loss = (loss_effect0 + loss_effect1 + loss_effect2 +
                      loss_effect3 + loss_effect4 + loss_effect5)
