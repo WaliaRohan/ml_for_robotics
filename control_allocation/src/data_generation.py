@@ -61,6 +61,8 @@ def main(n=10000, train_split=0.8):
   tau_tensor = torch.zeros((n, 3))
 
   for (i, vector) in enumerate(u_tensor):
+      if i%1000 is 0:
+        print(i)
       tau_tensor[i] = tau(vector).squeeze()
 
 
