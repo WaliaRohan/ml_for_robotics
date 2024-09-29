@@ -45,6 +45,12 @@ def B(vector):
                       [1, torch.sin(a2), torch.sin(a3)],
                       [l2, l1*torch.sin(a2)  - l3*torch.cos(a2), l1*torch.sin(a3) - l4*torch.cos(a3)]])
 
+  if(vector.is_cuda):
+    B = B.to('cuda')
+
+#   print("Is vector on cuda: ", vector.is_cuda)
+#   print("Is B on cuda: ", B.is_cuda)
+
   return B
 
 def tau(vector):

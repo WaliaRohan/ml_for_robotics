@@ -1,9 +1,10 @@
+import time
+
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torchviz import make_dot
 
 from losses import *
-# import torch.nn as nn
 from models import *
 
 
@@ -16,28 +17,28 @@ class CustomLoss(nn.Module):
 
         return combined_loss(batch_predicted_u, batch_predicted_tau, batch_ground_truth_tau)
 
-# Select network architecture
-model = dense_arch()
+# Load model and data
+model = torch.load("model.pt", weights_only=False)
+std_tau_tensor_test = torch.load('data.pt', weights_only=False)["std_tau_tensor_test"]
+print(std_tau_tensor_test.shape)
 
-# Save model for rendering
-torch.save(model, "model.pt")
+# Move model and tensor to cuda if available
+if torch.cuda.is_available():
+    print("Cuda available: Moving model and tensor to cuda")
+    model.to('cuda')
+    std_tau_tensor_test = std_tau_tensor_test.to('cuda')
 
 optimizer = torch.optim.SGD(model.parameters(), lr=0.00001)
 loss_fn = CustomLoss()
 
-# Testing
-
-std_tau_tensor_test = torch.load('data.pt', weights_only=False)["std_tau_tensor_test"]
-print(std_tau_tensor_test.shape)
-
+# Training
 num_epochs = 10
 batch_size = 1024
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(device)
-
 # Tensorboard
 writer = SummaryWriter()
+
+start = time.time()
 
 for epoch in range(num_epochs):
 
@@ -66,11 +67,14 @@ for epoch in range(num_epochs):
 
       print(f"Epoch [{epoch+1}/{num_epochs}], Batch: {batch}, Loss: {loss.item()}")
 
-      writer.add_scalar("Loss/test", loss, epoch)
+    writer.add_scalar("Loss/test", loss, epoch+1)
 
     # shuffle input tensor after each epoch to reduce bias towards end of testing data
     shuffled_indices = torch.randperm(std_tau_tensor_test.size(0))
     std_tau_tensor_test = std_tau_tensor_test[shuffled_indices]
+
+end = time.time()
+print("Elapsed wall clock time: ", end - start)
 
 writer.flush()
 
