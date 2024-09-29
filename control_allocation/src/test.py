@@ -26,12 +26,12 @@ if torch.cuda.is_available():
     model.to('cuda')
     std_tau_tensor_test = std_tau_tensor_test.to('cuda')
 
-optimizer = torch.optim.SGD(model.parameters(), lr=0.00001)
 loss_fn = CustomLoss()
 
-# Training
+# Testing
 num_epochs = 10
 batch_size = 1024
+model.eval()
 
 # Tensorboard
 writer = SummaryWriter()
@@ -41,31 +41,25 @@ start = time.time()
 for epoch in range(num_epochs):
 
     batch = 0
+    batch_loss = 0
 
     for start_index in range(0, std_tau_tensor_test.size(0), batch_size):
 
       batch += 1
 
+      # Make a Forward Pass and get the output.
       end_index = start_index + batch_size
-
-      model.eval()
-
       tau_test = std_tau_tensor_test[start_index:end_index]
-      # print(tau_test.shape)
-
       batch_predicted_u = model[:5](tau_test)
       batch_predicted_tau = model(tau_test)
-      # print(batch_predicted_tau)
 
+      # Record and report loss
       loss = loss_fn(batch_predicted_u, batch_predicted_tau, tau_test)
-
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
+      batch_loss += loss.item()
 
       print(f"Epoch [{epoch+1}/{num_epochs}], Batch: {batch}, Loss: {loss.item()}")
 
-    writer.add_scalar("Loss/test", loss, epoch+1)
+    writer.add_scalar("Loss/test", batch_loss/batch, epoch+1)
 
     # shuffle input tensor after each epoch to reduce bias towards end of testing data
     shuffled_indices = torch.randperm(std_tau_tensor_test.size(0))

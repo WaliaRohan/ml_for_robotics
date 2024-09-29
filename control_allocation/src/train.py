@@ -1,10 +1,9 @@
 import time
 
 import torch
+from losses import *
 from models import *
 from torch.utils.tensorboard import SummaryWriter
-
-from losses import *
 
 
 # Define combined loss
@@ -39,6 +38,7 @@ loss_fn = CustomLoss()
 # Training
 num_epochs = 10
 batch_size = 1024
+model.train()
 
 # Tensorboard
 writer = SummaryWriter()
@@ -48,35 +48,34 @@ start = time.time()
 for epoch in range(num_epochs):
 
     batch = 0
+    batch_loss = 0
 
     for start_index in range(0, std_tau_tensor_train.size(0), batch_size):
 
       batch += 1
+      
+      # Clear residual gradients
+      optimizer.zero_grad()
 
+      # Make a Forward Pass and get the output
       end_index = start_index + batch_size
-
-      model.train()
-
       tau_train = std_tau_tensor_train[start_index:end_index]
-      # print(tau_train.shape)
-
       batch_predicted_u = model[:5](tau_train)
       batch_predicted_tau = model(tau_train)
-      # print(batch_predicted_tau)
 
-    #   print("Is tau_train on cuda: ", tau_train.is_cuda)
-    #   print("Is batch_predicted_u on cuda: ", batch_predicted_u.is_cuda)
-    #   print("Is batch_predicted_tau on cuda: ", batch_predicted_tau.is_cuda)
-
+      # Calculate the loss and make a backward pass to caculate gradients.
       loss = loss_fn(batch_predicted_u, batch_predicted_tau, tau_train)
 
-      optimizer.zero_grad()
       loss.backward()
+
+      # Run the optimizer to update the weight
       optimizer.step()
 
+      # Record and report loss
+      batch_loss += loss.item()
       print(f"Epoch [{epoch+1}/{num_epochs}], Batch: {batch}, Loss: {loss.item()}")
 
-    writer.add_scalar("Loss/train", loss, epoch+1)
+    writer.add_scalar("Loss/train", batch_loss/batch, epoch+1)
 
     # shuffle input tensor after each epoch to reduce bias towards end of training data
     shuffled_indices = torch.randperm(std_tau_tensor_train.size(0))
@@ -85,7 +84,7 @@ for epoch in range(num_epochs):
 end = time.time()
 print("Elapsed wall clock time: ", end - start)
 
-# Save model for rendering
+# Save model
 torch.save(model, "model.pt")
 
 writer.flush()
