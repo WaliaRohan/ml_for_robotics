@@ -1,11 +1,9 @@
 import time
 
 import torch
-from torch.utils.tensorboard import SummaryWriter
-from torchviz import make_dot
-
 from losses import *
 from models import *
+from torch.utils.tensorboard import SummaryWriter
 
 
 # Define combined loss
