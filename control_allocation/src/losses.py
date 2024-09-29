@@ -40,6 +40,10 @@ def L1_batch(batch_predicted_tau, batch_ground_truth_tau):
 def L2(predicted_u):
 
     u_max = torch.tensor([30000, 30000, 180, 60000, 180]) # [f1 f2 a2 f3 a3]  Switch a2 and f3 values
+
+    if (predicted_u.is_cuda):
+        u_max = u_max.to('cuda')
+
     predicted_u_max = torch.abs(predicted_u)
     elementwise_max = torch.max(predicted_u_max - u_max, torch.tensor(0))
 
@@ -61,6 +65,9 @@ def L3(batch_predicted_u):
     # https://neptune.ai/blog/pytorch-loss-functions
 
     max_rates = torch.tensor([1000, 1000, 10, 1000, 10]) # d_f1 d_f2 d_a3 d_f3 d_a3 -> paper table 1
+
+    if (batch_predicted_u.is_cuda):
+        max_rates = max_rates.to('cuda')
 
     delta_batch_predicted_u = torch.diff(batch_predicted_u, dim=0)
 
