@@ -1,0 +1,52 @@
+Vehicle dataset folder location: C:\archive
+This "archive" folder should have the 3 subfolders from the dataset: test, train, and val. 
+Just run the code using the command "python HW2.py" 
+
+Python 3.10.9
+
+Package                 Version
+----------------------- ------------
+absl-py                 2.1.0
+certifi                 2024.8.30
+charset-normalizer      3.3.2
+contourpy               1.3.0
+cycler                  0.12.1
+filelock                3.16.0
+fonttools               4.53.1
+fsspec                  2024.9.0
+grpcio                  1.66.2
+idna                    3.10
+Jinja2                  3.1.4
+joblib                  1.4.2
+kiwisolver              1.4.7
+Markdown                3.7
+MarkupSafe              2.1.5
+matplotlib              3.9.2
+mpmath                  1.3.0
+networkx                3.3
+numpy                   1.24.3
+packaging               24.1
+pandas                  2.2.3
+pillow                  10.4.0
+pip                     24.2
+protobuf                5.28.2
+pyparsing               3.1.4
+python-dateutil         2.9.0.post0
+pytz                    2024.2
+requests                2.32.3
+scikit-learn            1.5.2
+scipy                   1.14.1
+setuptools              73.0.1
+six                     1.16.0
+sympy                   1.13.2
+tensorboard             2.18.0
+tensorboard-data-server 0.7.2
+threadpoolctl           3.5.0
+torch                   2.1.0+cu121
+torch-tb-profiler       0.4.3
+torchvision             0.16.0+cu121
+typing_extensions       4.12.2
+tzdata                  2024.2
+urllib3                 2.2.3
+Werkzeug                3.0.4
+wheel                   0.44.0
