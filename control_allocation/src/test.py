@@ -61,10 +61,6 @@ for epoch in range(num_epochs):
 
     writer.add_scalar("Loss/test", batch_loss/batch, epoch+1)
 
-    # shuffle input tensor after each epoch to reduce bias towards end of testing data
-    shuffled_indices = torch.randperm(std_tau_tensor_test.size(0))
-    std_tau_tensor_test = std_tau_tensor_test[shuffled_indices]
-
 end = time.time()
 print("Elapsed wall clock time: ", end - start)
 
