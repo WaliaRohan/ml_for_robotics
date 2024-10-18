@@ -1,6 +1,5 @@
-Vehicle dataset folder location: C:\archive
-This "archive" folder should have the 3 subfolders from the dataset: test, train, and val. 
-Just run the code using the command "python HW2.py" 
+The project root folder should have the 3 subfolders from the dataset: test, 
+train, and val. Run the code using the command "python HW2.py" 
 
 Python 3.10.9
 

@@ -1,15 +1,16 @@
 import os
 import time
+
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import torchvision.transforms as transforms
 import torchvision.datasets as datasets
+import torchvision.transforms as transforms
+from PIL import Image
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 from torchvision import models
-from PIL import Image
-import matplotlib.pyplot as plt
 
 # Define the device
 device = (
@@ -36,7 +37,7 @@ class Params:
 params = Params()
 
 # Data directories
-data_dir = r'C:\archive'  # Change this path to your folder containing 'train', 'val', and 'test' folders
+data_dir = os.getcwd() # Change this path to your folder containing 'train', 'val', and 'test' folders
 
 # Data augmentations and normalization (for training, validation, and testing)
 data_transforms = {
@@ -167,7 +168,7 @@ if __name__ == '__main__':
     model = train_model(model, criterion, optimizer, lr_scheduler)
 
     # Load and predict on test images
-    test_images_dir = r'C:\archive\test'  # Adjust this path as needed
+    test_images_dir = os.path.join(data_dir, "test") # Adjust this path as needed
     test_images, test_image_paths = load_test_images(test_images_dir)
     test_images = test_images.to(device)
 
