@@ -1,1 +1,9 @@
+# Ignore directories
 env/
+__pycache__/
+runs/
+
+# Ignore specific file types
+*.npz
+*.pth
+*.old
