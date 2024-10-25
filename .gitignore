@@ -2,6 +2,10 @@
 env/
 __pycache__/
 runs/
+vehicle_classification/train
+vehicle_classification/test
+vehicle_classification/val
+
 
 # Ignore specific file types
 *.npz
