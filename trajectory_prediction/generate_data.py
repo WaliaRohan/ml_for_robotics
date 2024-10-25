@@ -1,3 +1,9 @@
+import gc
+
+import numpy as np
+from dubinEHF3d import dubinEHF3d
+from sklearn.model_selection import train_test_split
+from torch.utils.data import DataLoader, Dataset, random_split
 
 
 # Dataset class
@@ -23,16 +29,16 @@ def pad_or_truncate_path(path, max_length=100):
         return path[:max_length]
 
 # Function to generate dataset based on the new grid and heading/climb configurations
-def generate_large_dataset(grid_size=100, r_min=100, step_size=10):
+def generate_large_dataset(grid_size=1000, r_min=100, step_size=10):
     print(f"Generating large dataset...")
 
     # Placeholders for data
     input_data = []
     target_data = []
 
-    # Grid of points (1000x1000 discretized into 100x100)
-    x_values = np.arange(-500, 500, step_size)
-    y_values = np.arange(-500, 500, step_size)
+    # Grid of points
+    x_values = np.arange(-grid_size/2, grid_size/2, step_size)
+    y_values = np.arange(-grid_size/2, grid_size/2, step_size)
     
     # Headings from 0 to 350 degrees (36 values)
     heading_values = np.deg2rad(np.arange(0, 360, 10))
@@ -43,6 +49,9 @@ def generate_large_dataset(grid_size=100, r_min=100, step_size=10):
     max_length = 100  # Maximum trajectory length
 
     sample_idx = 0
+
+    total_samples = len(x_values)*len(y_values)*len(heading_values)*len(climb_angles)
+    print("Total possible samples: ", total_samples)
 
     for x2 in x_values:
         for y2 in y_values:
@@ -63,33 +72,20 @@ def generate_large_dataset(grid_size=100, r_min=100, step_size=10):
                     if sample_idx % 10000 == 0:
                         print(f"{sample_idx} samples generated...")
 
+    print("Total samples generated: ", sample_idx+1)
     print("Large dataset generation complete!")
     return np.array(input_data), np.array(target_data)
 
-# Prepare Data Loaders
-def prepare_data_loaders(batch_size=64):
-    inputs, targets = generate_large_dataset()
-    dataset = DubinsDataset(inputs, targets)
-
-    # Split dataset into train and validation sets (80/20 split)
-    train_size = int(0.8 * len(dataset))
-    val_size = len(dataset) - train_size
-
-    train_dataset, val_dataset = random_split(dataset, [train_size, val_size])
-
-    # Data loaders
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=False)
-
-    print("Data loaders are ready!")
-    return train_loader, val_loader
-
+# Main script for training
 if __name__ == "__main__":
-    # Prepare data loaders
-    train_loader, val_loader = prepare_data_loaders()
 
-    # Initialize model
-    input_size = 4  # x2, y2, psi, gamma
-    hidden_size = 128
-    output_size = 3  # Trajectory output: x, y, alt
-    model = DubinsRNN(input_size, hidden_size, output_size).to(device)
+    inputs, targets = generate_large_dataset(1000, 100, 10)
+    
+    inputs_train, inputs_temp, targets_train, targets_temp = train_test_split(inputs, targets, test_size=0.2, random_state=42)
+    np.savez('train_data.npz', inputs_train=inputs_train, targets_train=targets_train)
+    del inputs, targets, inputs_train, targets_train
+    gc.collect() # Manually trigger garbage collection
+    
+    inputs_val, inputs_test, targets_val, targets_test = train_test_split(inputs_temp, targets_temp, test_size=0.5, random_state=42)
+    np.savez('val_data.npz', inputs_val=inputs_val, targets_val=targets_val)
+    np.savez('test_data.npz', inputs_test=inputs_test, targets_test=targets_test)
