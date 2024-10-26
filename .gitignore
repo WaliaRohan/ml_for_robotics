@@ -6,6 +6,8 @@ vehicle_classification/train
 vehicle_classification/test
 vehicle_classification/val
 
+trajectory_prediction/__pycache__
+trajectory_prediction/runs
 
 # Ignore specific file types
 *.npz
