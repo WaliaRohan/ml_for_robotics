@@ -1,6 +1,7 @@
-import numpy as np
 import matplotlib.pyplot as plt
-from dubinEHF3d import dubinEHF3d  # Assuming you have converted this function separately
+import numpy as np
+from dubinEHF3d import \
+    dubinEHF3d  # Assuming you have converted this function separately
 
 # Keep the initial position zero
 x1 = 0
@@ -26,7 +27,7 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 ax.plot(path[:, 0], path[:, 1], path[:, 2], 'b.-')  # Path points
 ax.plot([x1], [y1], [alt1], 'r*')  # Start point
-ax.plot([x2], [y2], [0], 'm*')  # End point
+ax.plot(path[-1][0], path[-1][1], path[-1][2], 'm*')  # End point
 
 # Set labels and grid
 ax.set_xlabel('x')
