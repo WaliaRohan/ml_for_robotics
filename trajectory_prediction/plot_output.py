@@ -73,7 +73,7 @@ def generate_random_ground_truths():
         # Run dubinEHF3d with sampled values
         path, psi_end, num_path_points = dubinEHF3d(x1, y1, alt1, psi, x2, y2, r_min, steplength, gamma)
 
-        print("Number of points: ", num_path_points)
+        # print("Number of points: ", num_path_points)
 
         # Check if the path is valid (non-zero points)
         if num_path_points > 0:
@@ -84,7 +84,10 @@ def generate_random_ground_truths():
 
 
 if __name__ == "__main__":
-        
+    # Set device to GPU if available, otherwise use CPU
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"Using device: {device}")
+
     # Initialize model
     input_size = 4  # x2, y2, psi, gamma
     hidden_size = 128
@@ -103,14 +106,15 @@ if __name__ == "__main__":
     # Loop through each input and get the model prediction
     with torch.no_grad():  # Disable gradient calculation for inference
         for input_data in inputs_tensor:
-            input_data = input_data.unsqueeze(0).unsqueeze(0)  # Reshape to (1, 1, input_size) for batch and sequence dim
-            prediction = model(input_data)
+            inputs = input_data.unsqueeze(0).repeat(1, 100, 1)
+            prediction = model(inputs)
             predicted_trajectories.append(prediction.squeeze().tolist())  # Squeeze and convert to list
 
     # Convert predicted_trajectories list to a numpy array if desired
     predicted_trajectories = np.array(predicted_trajectories)
 
     print(predicted_trajectories.shape)
+    plot_dubin_paths(ground_truth_trajectories, predicted_trajectories)
 
 
     

@@ -52,7 +52,7 @@ if __name__ == "__main__":
     # Training parameters
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.00001)
-    num_epochs = 100
+    num_epochs = 1
     train_losses = []
     val_losses = []
 
@@ -71,14 +71,15 @@ if __name__ == "__main__":
         train_loss = 0.0
 
         for i, (inputs, targets) in enumerate(train_loader):
-            inputs = inputs.float().to(device).unsqueeze(1)
+            inputs = inputs.float().to(device)
+            inputs = inputs.unsqueeze(1).repeat(1, 100, 1)
             targets = targets.float().to(device)
 
             optimizer.zero_grad()
 
             # Forward pass
             outputs = model(inputs)
-            loss = criterion(outputs, targets[:, -1, :])
+            loss = criterion(outputs, targets)
 
             # Backward pass
             loss.backward()
@@ -97,7 +98,7 @@ if __name__ == "__main__":
             targets = targets.float().to(device)
 
             outputs = model(inputs)
-            loss = criterion(outputs, targets[:, -1, :])
+            loss = criterion(outputs, targets)
 
             val_loss += loss.item()
 
