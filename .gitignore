@@ -13,3 +13,4 @@ trajectory_prediction/runs
 *.npz
 *.pth
 *.old
+*.png
