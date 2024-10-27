@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-file_name = "1st_train_val_losses.npz"
+file_name = "train_val_losses.npz"
 
 train_losses = np.load(file_name)['train_losses']
 val_losses = np.load(file_name)['val_losses']

@@ -1,15 +1,16 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
+from mpl_toolkits.mplot3d import Axes3D
+
 from dubinEHF3d import dubinEHF3d
 from dubins_model import DubinsRNN
-from mpl_toolkits.mplot3d import Axes3D
 
 
 def plot_dubin_paths(ground_truth_trajectories, predicted_trajectories):
     # Loop over each pair of ground truth and predicted trajectory
     for i, (gt_path, pred_path) in enumerate(zip(ground_truth_trajectories, predicted_trajectories)):
-        fig = plt.figure()
+        fig = plt.figure(figsize=(8, 6), constrained_layout = True)
         ax = fig.add_subplot(111, projection='3d')
         
         # Plot ground truth path in blue
@@ -30,6 +31,8 @@ def plot_dubin_paths(ground_truth_trajectories, predicted_trajectories):
 
         # Set title for each plot
         ax.set_title(f'Trajectory Plot {i+1}')
+
+        plt.savefig(f'plots/Trajectory Comparison {i+1}.png')
     
     # Show all figures at once
     plt.show()
@@ -90,10 +93,12 @@ if __name__ == "__main__":
 
     # Initialize model
     input_size = 4  # x2, y2, psi, gamma
-    hidden_size = 128
+    hidden_size = 256
     output_size = 3  # Trajectory output: x, y, alt
     model = DubinsRNN(input_size, hidden_size, output_size)
     model.load_state_dict(torch.load('dubins_rnn_model.pth', weights_only=True))
+
+    model.to(device)
 
     model.eval()
 
@@ -106,7 +111,7 @@ if __name__ == "__main__":
     # Loop through each input and get the model prediction
     with torch.no_grad():  # Disable gradient calculation for inference
         for input_data in inputs_tensor:
-            inputs = input_data.unsqueeze(0).repeat(1, 100, 1)
+            inputs = input_data.unsqueeze(0).repeat(1, 100, 1).to(device)
             prediction = model(inputs)
             predicted_trajectories.append(prediction.squeeze().tolist())  # Squeeze and convert to list
 

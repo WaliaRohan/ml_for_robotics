@@ -31,11 +31,9 @@ class DubinsRNN(nn.Module):
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
         # Initialize first hidden and cell states to 0
-        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
-        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size)
+        h0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
+        c0 = torch.zeros(self.num_layers, x.size(0), self.hidden_size).to(device)
     
         LSTM_out, _ = self.LSTM(x, (h0, c0))
-        # out = self.fc(rnn_out[:, -1, :])
-        # LSTM_out[:, 0, :] = 0
         out = self.fc(LSTM_out)
         return out

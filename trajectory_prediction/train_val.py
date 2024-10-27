@@ -6,9 +6,10 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from dubins_model import DubinsDataset, DubinsRNN
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
+
+from dubins_model import DubinsDataset, DubinsRNN
 
 
 # Prepare Data Loaders
@@ -52,7 +53,7 @@ if __name__ == "__main__":
     # Training parameters
     criterion = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.00001)
-    num_epochs = 1
+    num_epochs = 100
     train_losses = []
     val_losses = []
 
@@ -128,10 +129,6 @@ if __name__ == "__main__":
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.title('Training and Validation Loss per Epoch')
-    
-    # Set y-axis range and increments
-    plt.ylim(0, 100)
-    # plt.yticks(range(0, 101, 5e))  # Y-axis from 0 to 100 in steps of 5
 
     # Set x-axis to show only integer values
     plt.xticks(range(1, num_epochs + 1))
