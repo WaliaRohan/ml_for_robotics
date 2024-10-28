@@ -1,3 +1,13 @@
+The following package versions were used to execute this code:
+
+- **matplotlib**: 3.9.2
+- **numpy**: 2.0.1
+- **scikit-learn**: 1.5.2
+- **torch**: 2.4.1
+- **torchaudio**: 2.4.1
+- **torchvision**: 0.19.1
+- **torchviz**: 0.0.2
+
 1. **Data generation:**
 
    - Create a `data` directory in the current folder.

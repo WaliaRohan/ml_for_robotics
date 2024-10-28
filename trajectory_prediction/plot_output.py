@@ -1,7 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
-from mpl_toolkits.mplot3d import Axes3D
 
 from dubinEHF3d import dubinEHF3d
 from dubins_model import DubinsRNN
