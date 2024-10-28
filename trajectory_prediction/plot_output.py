@@ -93,9 +93,10 @@ if __name__ == "__main__":
 
     # Initialize model
     input_size = 4  # x2, y2, psi, gamma
-    hidden_size = 256
+    hidden_size = 128
+    num_layers = 1
     output_size = 3  # Trajectory output: x, y, alt
-    model = DubinsRNN(input_size, hidden_size, output_size)
+    model = DubinsRNN(input_size, hidden_size, output_size, num_layers=num_layers)
     model.load_state_dict(torch.load('dubins_rnn_model.pth', weights_only=True))
 
     model.to(device)
