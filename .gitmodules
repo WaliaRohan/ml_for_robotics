@@ -1,0 +1,3 @@
+[submodule "monocular_depth_estimation/monodepth2"]
+	path = monocular_depth_estimation/monodepth2
+	url = https://github.com/nianticlabs/monodepth2.git
