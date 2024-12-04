@@ -9,8 +9,8 @@ import os
 # Function to parse command-line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Process bounding boxes and project onto an image.")
-    parser.add_argument("--height", type=int, default=80, required=True, help="Height of the camera in meters.")
-    parser.add_argument("--frame", type=str, default="00000", required=True, help="Frame number of the image.")
+    parser.add_argument("--height", type=int, default=80, required=False, help="Height of the camera in meters.")
+    parser.add_argument("--frame", type=str, default="00000", required=False, help="Frame number of the image.")
     return parser.parse_args()
 
 def getBBox(camera_file, semantic_file, bbox_file):
@@ -204,12 +204,12 @@ if __name__ == "__main__":
     height = args.height
     frame = args.frame
 
-    plot_bbox(frame, height)
+    # plot_bbox(frame, height)
 
-    # image_range = range(0, 10)  # Change range as needed
-    # data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
+    image_range = range(0, 10)  # Change range as needed
+    data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
 
     # Create the JSON file
-    # create_json(image_range, data_folder, height)
+    create_json(image_range, data_folder, height)
 
     
