@@ -74,7 +74,27 @@ def getBBox(camera_file, semantic_file, bbox_file, image_file):
     ])
 
     # Class ID remapping
-    idmap = {(40,): 0, (100,): 1, (101,): 2, (102,): 3, (103,): 4, (104,): 5, (105,): 6, (104, 41): 7, (105, 41): 8, (41, 104): 7, (41, 105): 8}
+
+    # Syndrone classes: https://github.com/LTTM/Syndrone/blob/59195038823fa17d5d416409f3c7f626fb12f9ab/modules/carla_utils/labelmap.py#L43
+    # "Persons": 40,
+    # "Riders": 41,
+    # "Cars": 100,
+    # "Trucks": 101,
+    # "Busses": 102,
+    # "Trains": 103,
+    # "Motorcycles": 104,
+    # "Bycicles": 105
+
+    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 9, (105, 41): 9, (41, 104): 10, (41, 105): 10}
+    
+   # COCO classes: https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
+    # Person: 1
+    # Bicycle: 2
+    # Car: 3
+    # Motorcycle: 4
+    # Bus: 6
+    # Train: 7
+    # Truck: 8
 
     # Bounding boxes
     bbs = np.array([bb['corners'] for bb in bboxes]) - shift
@@ -174,16 +194,17 @@ def plot_bbox(frame, height, resized=False):
     image = cv2.imread(image_file)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for Matplotlib
 
+    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 9, (105, 41): 9, (41, 104): 10, (41, 105): 10}
     class_strs = {
-    '0': 'Persons', # Original class 40
-    '1': 'Cars', # Original class 100
-    '2': 'Trucks', # Original class 101
-    '3': 'Busses', # Original class 102
-    '4': 'Trains', # Original class 103
-    '5': 'Motorcycles', # Original class 104 
-    '6': 'Bicycles', # Original class 105
-    '7': 'Riders/Motorcycles', # Original class 41/104 
-    '8': 'Riders/Bicycles' # Original class 41/105
+    '1': 'Person', # Original class 40
+    '3': 'Car', # Original class 100
+    '8': 'Truck', # Original class 101
+    '6': 'Bus', # Original class 102
+    '7': 'Train', # Original class 103
+    '4': 'Motorcycle', # Original class 104 
+    '2': 'Bicycle', # Original class 105
+    '9': 'Rider/Motorcycle', # Original class 41/104 
+    '10': 'Rider/Bicycle' # Original class 41/105
     }
 
     # Draw bounding boxes
