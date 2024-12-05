@@ -9,12 +9,53 @@ import os
 # Function to parse command-line arguments
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Process bounding boxes and project onto an image.")
-    parser.add_argument("--height", type=int, default=80, required=False, help="Height of the camera in meters.")
+    parser.add_argument("--height", type=int, default=20, required=False, help="Height of the camera in meters.")
     parser.add_argument("--frame", type=str, default="00000", required=False, help="Frame number of the image.")
     return parser.parse_args()
 
-def getBBox(camera_file, semantic_file, bbox_file):
+def resize_with_aspect_ratio(image, target_size, plot_images=False):
+    """Resize an image to the target size while preserving aspect ratio, padding with black pixels."""
+    h, w = image.shape[:2]  # grab width and height of image
+    target_h, target_w = target_size
 
+    # Compute scale for resizing
+    scale = min(target_w / w, target_h / h)
+    new_w, new_h = int(w * scale), int(h * scale)
+
+    # Resize the image
+    resized = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
+
+    # Create a blank canvas for the target size
+    if len(image.shape) == 2:  # Single-channel (grayscale) image
+        canvas = np.zeros((target_h, target_w), dtype=image.dtype)
+    else:  # Multi-channel image
+        canvas = np.zeros((target_h, target_w, image.shape[2]), dtype=image.dtype)
+
+    # Compute padding
+    pad_x = (target_w - new_w) // 2
+    pad_y = (target_h - new_h) // 2
+
+    # Place the resized image in the center of the canvas
+    canvas[pad_y:pad_y + new_h, pad_x:pad_x + new_w] = resized
+
+    # Plot the images if requested
+    if plot_images:
+        fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+        axes[0].imshow(image if len(image.shape) == 3 else image, cmap='gray')
+        axes[0].set_title("Original Image")
+        axes[0].axis('off')
+
+        axes[1].imshow(canvas if len(canvas.shape) == 3 else canvas, cmap='gray')
+        axes[1].set_title("Resized Image")
+        axes[1].axis('off')
+
+        plt.tight_layout()
+        plt.show()
+
+    return canvas, scale, pad_x, pad_y
+
+def getBBox(camera_file, semantic_file, bbox_file, image_file):
+    # Load files
     camera = json.load(open(camera_file))
     sem = cv2.imread(semantic_file, cv2.IMREAD_UNCHANGED)
     bboxes = json.load(open(bbox_file))
@@ -23,58 +64,78 @@ def getBBox(camera_file, semantic_file, bbox_file):
     shift = np.array([camera['x'], camera['y'], camera['z']])
     rotation = R.from_euler('yzx', [90-camera['pitch'], camera['yaw'], camera['roll']], degrees=True).as_matrix()
 
-    # This is likely the intrinsic matrix - allows projecting 3D points onto the 2D image plane
+    # Intrinsic matrix
     K = np.array([
-    [0, 960, 960],
-    [960, 0, 540],
-    [0, 0, 1]])
+        [0, 960, 960],
+        [960, 0, 540],
+        [0, 0, 1]
+    ])
 
-    # This remaps class numbers
-    idmap = {(40,):0, (100,):1, (101,):2, (102,):3, (103,):4, (104,):5, (105,):6, (104, 41):7, (105, 41):8, (41, 104):7, (41, 105):8}
+    # Class ID remapping
+    idmap = {(40,): 0, (100,): 1, (101,): 2, (102,): 3, (103,): 4, (104,): 5, (105,): 6, (104, 41): 7, (105, 41): 8, (41, 104): 7, (41, 105): 8}
 
     # Bounding boxes
     bbs = np.array([bb['corners'] for bb in bboxes]) - shift
     bbs = bbs @ rotation
 
-    # Projected bounding boxes - obtained when the 3D bounding boxes are multiplied by the camera's intrinsic matrix
+    # Project bounding boxes
     pbb = bbs @ K.T
 
-    # After a point is projected into 2D homogeneous coordinates, its third value (often called w) should be positive
-    # to indicate that the point is in front of the camera (visible). If w ≤ 0, the point is behind the camera or invalid for projection.
-    
-    # Check if homogeneous coordinate "w" (third column of pbb) is positive. 
-    valid = np.any(pbb[...,-1] > 0, axis=-1)
+    # Check if homogeneous coordinate "w" is positive
+    valid = np.any(pbb[..., -1] > 0, axis=-1)
 
     # Normalize bounding boxes
-    pbb /= pbb[...,-1:] + 1e-5
-    uls = pbb.min(axis=1) # upper left corner
-    lrs = pbb.max(axis=1) # lower right corner
+    pbb /= pbb[..., -1:] + 1e-5
+    uls = pbb.min(axis=1)  # upper left corner
+    lrs = pbb.max(axis=1)  # lower right corner
 
-    vboxes = [] # list of acceptable 2D bounding boxes
+    # Load the original image
+    image = cv2.imread(image_file)
+
+    target_size = 1080
+
+    # Resize the image with aspect ratio preserved
+    resized_image, scale, pad_x, pad_y = resize_with_aspect_ratio(image, (target_size, target_size))
+    sem_resized, _, _, _ = resize_with_aspect_ratio(sem, (target_size, target_size))
+
+    parent_dir = os.path.dirname(image_file)
+    output_folder = os.path.join(parent_dir, "resized")
+
+    # Save the resized image in the "resized" folder
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    resized_image_path = os.path.join(output_folder, os.path.basename(image_file))
+    cv2.imwrite(resized_image_path, resized_image)
+
+    # Adjust bounding boxes for the resized image
+    vboxes = []
     for v, ul, lr, bb in zip(valid, uls, lrs, bboxes):
-        # If point is valid (in front of camera)
         if v:
-            # Round to integers
             x0, y0 = np.round(ul).astype(int)[:2]
             x1, y1 = np.round(lr).astype(int)[:2]
-            # Ensure coordinates are within image boundaries
-            x0 = np.clip(x0, a_min=0, a_max=1920)
-            x1 = np.clip(x1, a_min=0, a_max=1920)
-            y0 = np.clip(y0, a_min=0, a_max=1080)
-            y1 = np.clip(y1, a_min=0, a_max=1080)
 
-            # The lower-right corner (x1, y1) must be strictly greater than the upper-left corner (x0, y0), ensuring the box has positive area.
-            # The area of the bounding box (width x height) must be less than half the image size (1920*1080/2). This removes overly large bounding boxes.
-            if x1 > x0 and y1 > y0 and (x1-x0)*(y1-y0) < 1920*1080/2:
-                roi = sem[y0:y1, x0:x1] # extract segmentation mask
+            # Scale bounding box coordinates
+            x0 = int(x0 * scale + pad_x)
+            x1 = int(x1 * scale + pad_x)
+            y0 = int(y0 * scale + pad_y)
+            y1 = int(y1 * scale + pad_y)
+
+            # Clip to image boundaries
+            x0 = np.clip(x0, a_min=0, a_max=target_size)
+            x1 = np.clip(x1, a_min=0, a_max=target_size)
+            y0 = np.clip(y0, a_min=0, a_max=target_size)
+            y1 = np.clip(y1, a_min=0, a_max=target_size)
+
+            # Validate box area and check for matching class pixels
+            if x1 > x0 and y1 > y0 and (x1 - x0) * (y1 - y0) < target_size * target_size / 2:
+                roi = sem_resized[y0:y1, x0:x1]
                 flag = False
                 for cl in bb['class']:
-                    flag = flag or np.any(roi == cl) # check if any pixel in roi matches classes present in bb
+                    flag = flag or np.any(roi == cl)
                 if flag:
                     vboxes.append(([x0, y0, x1, y1], idmap[tuple(bb['class'])], roi))
 
     return vboxes
-
 
 def read_bbox(frame, height):
 
@@ -87,29 +148,49 @@ def read_bbox(frame, height):
     bbox_file = bbox_folder + frame + ".json"
     semantic_file = data_folder + "height" + str(height) + "m/semantic/" + frame + ".png"
 
-    return getBBox(camera_file, semantic_file, bbox_file)
+    image_folder = data_folder + "height" + str(height) + "m/rgb/"
+    image_file = image_folder + frame + ".jpg"
+
+    return getBBox(camera_file, semantic_file, bbox_file, image_file)
 
 
-def plot_bbox(frame, height):
-    
+def plot_bbox(frame, height, resized=False):
+
+    # Get bounding boxes
+    vboxes = read_bbox(frame, height)
+
     # File paths
     data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
     image_folder = data_folder + "height" + str(height) + "m/rgb/"
-    image_file = image_folder + frame + ".jpg"
     
+    if resized:
+        image_folder = image_folder + "resized/"
+    
+    image_file = image_folder + frame + ".jpg"
+
     # Load the image
     image = cv2.imread(image_file)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for Matplotlib
 
-    vboxes = read_bbox(frame, height)
+    class_strs = {
+    '0': 'Persons', # Original class 40
+    '1': 'Cars', # Original class 100
+    '2': 'Trucks', # Original class 101
+    '3': 'Busses', # Original class 102
+    '4': 'Trains', # Original class 103
+    '5': 'Motorcycles', # Original class 104 
+    '6': 'Bicycles', # Original class 105
+    '7': 'Riders/Motorcycles', # Original class 41/104 
+    '8': 'Riders/Bicycles' # Original class 41/105
+    }
 
     # Draw bounding boxes
     for bbox, class_id, roi in vboxes:
         x0, y0, x1, y1 = bbox
         # Draw rectangle
         cv2.rectangle(image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # Blue box with thickness 2
-        # Put class ID text
-        cv2.putText(image, str(class_id), (x0, y0-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)  # Green text
+        # Put class
+        cv2.putText(image, class_strs[str(class_id)], (x0, y0-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)  # Green text
 
     # Display the image
     plt.figure(figsize=(10, 6))
@@ -117,7 +198,7 @@ def plot_bbox(frame, height):
     plt.axis('off')
     plt.show()
 
-def create_json(image_range, data_folder, height):
+def create_json(image_range, data_folder, height, resized=False):
 
     # References for what JSON should look like: 
     # https://docs.aws.amazon.com/rekognition/latest/customlabels-dg/md-coco-overview.html 
@@ -149,6 +230,8 @@ def create_json(image_range, data_folder, height):
 
         # File paths
         image_folder = os.path.join(data_folder, f"height{height}m/rgb/")
+        if resized:
+            image_folder = image_folder + "resized/"
         bbox_folder = os.path.join(data_folder, "bboxes/")
         camera_file = os.path.join(data_folder, f"height{height}m/camera/{frame}.json")
         image_file = os.path.join(image_folder, f"{frame}.jpg")
@@ -161,7 +244,7 @@ def create_json(image_range, data_folder, height):
             continue
 
         # Process the image and bounding boxes
-        vboxes = getBBox(camera_file, semantic_file, bbox_file)
+        vboxes = getBBox(camera_file, semantic_file, bbox_file, image_file)
 
         # Add image metadata
         output_json["images"].append({
@@ -180,7 +263,7 @@ def create_json(image_range, data_folder, height):
             annotation = {
                 "id": annotation_id,
                 "category_id": category_id,
-                "iscrowd": 0,
+                # "iscrowd": 0,
                 # "segmentation": roi.tolist(),  # Add segmentation data if available
                 "image_id": frame_index,
                 "bbox": str([int(x0), int(y0), int(x1 - x0), int(y1 - y0)])
@@ -201,15 +284,22 @@ def create_json(image_range, data_folder, height):
 if __name__ == "__main__":
     args = parse_arguments()  # Parse the command-line arguments
 
+
+    # image_file = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/height20m/rgb/00000.jpg"
+    # image = cv2.imread(image_file)
+    # resize_with_aspect_ratio(image, (1080, 1080), True)
+
     height = args.height
     frame = args.frame
 
-    # plot_bbox(frame, height)
+    # plot_bbox(frame, height, True)
 
     image_range = range(0, 10)  # Change range as needed
     data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
 
-    # Create the JSON file
+    # # Create the JSON file
     create_json(image_range, data_folder, height)
+
+
 
     
