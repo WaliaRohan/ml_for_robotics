@@ -94,7 +94,7 @@ def getBBox(camera_file, semantic_file, bbox_file, image_file):
     # Load the original image
     image = cv2.imread(image_file)
 
-    target_size = 1080
+    target_size = 640
 
     # Resize the image with aspect ratio preserved
     resized_image, scale, pad_x, pad_y = resize_with_aspect_ratio(image, (target_size, target_size))
@@ -248,12 +248,14 @@ def create_json(image_range, data_folder, height, resized=False):
         # Process the image and bounding boxes
         vboxes = getBBox(camera_file, semantic_file, bbox_file, image_file)
 
+        target_size = 640
+
         # Add image metadata
         output_json["images"].append({
             "id": frame_index,
-            "width": 1920,
-            "height": 1080,
-            "file_name": frame_index + ".jpg"
+            "width": target_size,
+            "height": target_size,
+            "file_name": frame + ".jpg"
         })
 
         # Add annotations
