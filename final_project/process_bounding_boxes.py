@@ -1,10 +1,12 @@
 import argparse
 import json
+import os
+
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.spatial.transform import Rotation as R
-import os
+
 
 # Function to parse command-line arguments
 def parse_arguments():
@@ -251,7 +253,7 @@ def create_json(image_range, data_folder, height, resized=False):
             "id": frame_index,
             "width": 1920,
             "height": 1080,
-            "file_name": image_file
+            "file_name": frame_index + ".jpg"
         })
 
         # Add annotations
@@ -263,17 +265,17 @@ def create_json(image_range, data_folder, height, resized=False):
             annotation = {
                 "id": annotation_id,
                 "category_id": category_id,
-                # "iscrowd": 0,
+                "iscrowd": 0,
                 # "segmentation": roi.tolist(),  # Add segmentation data if available
                 "image_id": frame_index,
-                "bbox": str([int(x0), int(y0), int(x1 - x0), int(y1 - y0)])
+                "bbox": [int(x0), int(y0), int(x1 - x0), int(y1 - y0)]
             }
 
             output_json["annotations"].append(annotation)
             annotation_id += 1
 
     # Save the JSON file
-    output_path = os.path.join("annotations.json")
+    output_path = os.path.join("./annotations/annotations.json")
     with open(output_path, "w") as f:
         json.dump(output_json, f, indent=4)
 
