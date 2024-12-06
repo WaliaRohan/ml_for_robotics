@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import time
 
 import cv2
 import matplotlib.pyplot as plt
@@ -85,7 +86,7 @@ def getBBox(camera_file, semantic_file, bbox_file, image_file):
     # "Motorcycles": 104,
     # "Bycicles": 105
 
-    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 9, (105, 41): 9, (41, 104): 10, (41, 105): 10}
+    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 1, (105, 41): 1, (41, 104): 1, (41, 105): 1}
     
    # COCO classes: https://tech.amikelive.com/node-718/what-object-categories-labels-are-in-coco-dataset/
     # Person: 1
@@ -128,6 +129,15 @@ def getBBox(camera_file, semantic_file, bbox_file, image_file):
         os.makedirs(output_folder)
     resized_image_path = os.path.join(output_folder, os.path.basename(image_file))
     cv2.imwrite(resized_image_path, resized_image)
+
+    sem_parent_dir = os.path.dirname(semantic_file)
+    sem_output_folder = os.path.join(sem_parent_dir, "resized")
+
+    # Save the resized image in the "resized" folder
+    if not os.path.exists(sem_output_folder):
+        os.makedirs(sem_output_folder)
+    sem_resized_image_path = os.path.join(sem_output_folder, os.path.basename(semantic_file))
+    cv2.imwrite(sem_resized_image_path, sem_resized)
 
     # Adjust bounding boxes for the resized image
     vboxes = []
@@ -194,7 +204,7 @@ def plot_bbox(frame, height, resized=False):
     image = cv2.imread(image_file)
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)  # Convert to RGB for Matplotlib
 
-    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 9, (105, 41): 9, (41, 104): 10, (41, 105): 10}
+    idmap = {(40,): 1, (100,): 3, (101,): 8, (102,): 6, (103,): 7, (104,): 4, (105,): 2, (104, 41): 1, (105, 41): 1, (41, 104): 1, (41, 105): 1}
     class_strs = {
     '1': 'Person', # Original class 40
     '3': 'Car', # Original class 100
@@ -203,8 +213,8 @@ def plot_bbox(frame, height, resized=False):
     '7': 'Train', # Original class 103
     '4': 'Motorcycle', # Original class 104 
     '2': 'Bicycle', # Original class 105
-    '9': 'Rider/Motorcycle', # Original class 41/104 
-    '10': 'Rider/Bicycle' # Original class 41/105
+    '0': 'Rider/Motorcycle', # Original class 41/104 - not in coco so invalid
+    '0': 'Rider/Bicycle' # Original class 41/105 - not in coco so invalid
     }
 
     # Draw bounding boxes
@@ -228,15 +238,15 @@ def create_json(image_range, data_folder, height, resized=False):
     # https://cocodataset.org/#format-data 
 
     class_strs = {
-    '0': 'Persons', # Original class 40
-    '1': 'Cars', # Original class 100
-    '2': 'Trucks', # Original class 101
-    '3': 'Busses', # Original class 102
-    '4': 'Trains', # Original class 103
-    '5': 'Motorcycles', # Original class 104 
-    '6': 'Bicycles', # Original class 105
-    '7': 'Riders/Motorcycles', # Original class 41/104 
-    '8': 'Riders/Bicycles' # Original class 41/105
+    '1': 'Person', # Original class 40
+    '3': 'Car', # Original class 100
+    '8': 'Truck', # Original class 101
+    '6': 'Bus', # Original class 102
+    '7': 'Train', # Original class 103
+    '4': 'Motorcycle', # Original class 104 
+    '2': 'Bicycle', # Original class 105
+    '0': 'Rider/Motorcycle', # Original class 41/104 
+    '0': 'Rider/Bicycle' # Original class 41/105
     }
 
     output_json = {
@@ -246,6 +256,8 @@ def create_json(image_range, data_folder, height, resized=False):
             {"id": int(key), "name": value} for key, value in class_strs.items()
         ]
     }
+
+    start_time = time.time()  # Record start time   
     
     annotation_id = 1  # Unique ID for each annotation
     for frame_index in image_range:
@@ -297,8 +309,11 @@ def create_json(image_range, data_folder, height, resized=False):
             output_json["annotations"].append(annotation)
             annotation_id += 1
 
+        elapsed_time = time.time() - start_time  # Calculate elapsed time
+        print(f"Image {frame_index}: {elapsed_time:.2f} seconds")
+
     # Save the JSON file
-    output_path = os.path.join("./annotations/annotations.json")
+    output_path = os.path.join("annotations.json")
     with open(output_path, "w") as f:
         json.dump(output_json, f, indent=4)
 
@@ -319,7 +334,7 @@ if __name__ == "__main__":
 
     # plot_bbox(frame, height, True)
 
-    image_range = range(0, 10)  # Change range as needed
+    image_range = range(0, 2999)  # Change range as needed
     data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
 
     # # Create the JSON file
