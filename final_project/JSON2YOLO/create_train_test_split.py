@@ -25,9 +25,11 @@ os.makedirs(val_image_folder, exist_ok=True)
 # Read filenames without extensions
 text_files = [os.path.splitext(f)[0] for f in os.listdir(label_folder) if f.endswith(".txt")]
 
-# Randomize the list and split into 80/20
+# Randomize the list and split
+random.seed(17)
 random.shuffle(text_files)
-split_idx = int(0.8 * len(text_files))
+train_ratio = 0.7
+split_idx = int(train_ratio * len(text_files))
 train_files = text_files[:split_idx]
 val_files = text_files[split_idx:]
 
