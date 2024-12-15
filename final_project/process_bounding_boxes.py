@@ -13,7 +13,8 @@ from scipy.spatial.transform import Rotation as R
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Process bounding boxes and project onto an image.")
     parser.add_argument("--height", type=int, default=20, required=False, help="Height of the camera in meters.")
-    parser.add_argument("--frame", type=str, default="00000", required=False, help="Frame number of the image.")
+    parser.add_argument("--frame", type=str, default="-1", required=False, help="Frame number of the image.")
+    parser.add_argument("--plot", type=bool, default=True, required=False, help="Frame number of the image.")
     return parser.parse_args()
 
 def resize_with_aspect_ratio(image, target_size, plot_images=False):
@@ -186,7 +187,7 @@ def read_bbox(frame, height):
     return getBBox(camera_file, semantic_file, bbox_file, image_file)
 
 
-def plot_bbox(frame, height, resized=False, target_class_id = "2"):
+def plot_bbox(frame, height, resized=False, target_class_id = "-2"):
 
     target_class_id += 1 # YOLO to COCO
 
@@ -221,7 +222,7 @@ def plot_bbox(frame, height, resized=False, target_class_id = "2"):
 
     # Draw bounding boxes
     for bbox, class_id, roi in vboxes:
-        if class_id == target_class_id:
+        if class_id is not -1 and class_id == target_class_id:
             x0, y0, x1, y1 = bbox
             # Draw rectangle
             cv2.rectangle(image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # Blue box with thickness 2
@@ -233,10 +234,8 @@ def plot_bbox(frame, height, resized=False, target_class_id = "2"):
     plt.figure(figsize=figsize)
 
     # Display the image
-    # plt.figure(figsize=(10, 6))
     plt.imshow(image)
     plt.axis('off')
-    # plt.show()
 
     return plt
 
@@ -333,21 +332,34 @@ def create_json(image_range, data_folder, height, resized=False):
 if __name__ == "__main__":
     args = parse_arguments()  # Parse the command-line arguments
 
-
-    # image_file = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/height20m/rgb/00000.jpg"
-    # image = cv2.imread(image_file)
-    # resize_with_aspect_ratio(image, (1080, 1080), True)
-
     height = args.height
     frame = args.frame
+    plot = args.plot
 
-    # plot_bbox(frame, height, True)
+    # process batch of images
+    if frame == -1:
+        image_range = range(0, 2999)  # Change range as needed
+        data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
 
-    image_range = range(0, 2999)  # Change range as needed
-    data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
+        # Create the JSON file
+        create_json(image_range, data_folder, height)
 
-    # # Create the JSON file
-    create_json(image_range, data_folder, height)
+    # process single frame
+    else:
+
+        data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
+        image_folder = data_folder + "height" + str(height) + "m/rgb/"
+        
+        image_file = image_folder + frame + ".jpg"
+
+        image = cv2.imread(image_file)
+        resize_with_aspect_ratio(image, (1080, 1080), plot_images=True)
+
+        if plot:
+            plt = plot_bbox(frame, height=20, target_class_id=2, resized=True)
+            plt.show()
+
+    
 
 
 
