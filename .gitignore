@@ -1,7 +1,7 @@
 # Ignore directories
 env/
 __pycache__/
-runs/
+runs*/
 vehicle_classification/train
 vehicle_classification/test
 vehicle_classification/val
