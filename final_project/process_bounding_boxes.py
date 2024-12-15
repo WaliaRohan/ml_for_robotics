@@ -186,7 +186,9 @@ def read_bbox(frame, height):
     return getBBox(camera_file, semantic_file, bbox_file, image_file)
 
 
-def plot_bbox(frame, height, resized=False):
+def plot_bbox(frame, height, resized=False, target_class_id = "2"):
+
+    target_class_id += 1 # YOLO to COCO
 
     # Get bounding boxes
     vboxes = read_bbox(frame, height)
@@ -219,17 +221,24 @@ def plot_bbox(frame, height, resized=False):
 
     # Draw bounding boxes
     for bbox, class_id, roi in vboxes:
-        x0, y0, x1, y1 = bbox
-        # Draw rectangle
-        cv2.rectangle(image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # Blue box with thickness 2
-        # Put class
-        cv2.putText(image, class_strs[str(class_id)], (x0, y0-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)  # Green text
+        if class_id == target_class_id:
+            x0, y0, x1, y1 = bbox
+            # Draw rectangle
+            cv2.rectangle(image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # Blue box with thickness 2
+            # Put class
+            cv2.putText(image, class_strs[str(class_id)], (x0, y0-5), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)  # Green text
+
+    dpi = 100
+    figsize = (640 / dpi, 640 / dpi)  # Set size in inches
+    plt.figure(figsize=figsize)
 
     # Display the image
-    plt.figure(figsize=(10, 6))
+    # plt.figure(figsize=(10, 6))
     plt.imshow(image)
     plt.axis('off')
-    plt.show()
+    # plt.show()
+
+    return plt
 
 def create_json(image_range, data_folder, height, resized=False):
 

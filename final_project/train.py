@@ -28,9 +28,6 @@ results = model.train(data=dataset_path,
 # Evaluate the model's performance on the validation set
 results = model.val()
 
-# Perform object detection on an image using the model
-# results = model("https://ultralytics.com/images/bus.jpg")
-
 # Export the model to ONNX format
 success = model.export(format="onnx")
 
