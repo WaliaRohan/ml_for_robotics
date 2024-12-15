@@ -2,6 +2,8 @@
 env/
 __pycache__/
 runs*/
+final_project/dataset
+final_project/syndrone_data
 vehicle_classification/train
 vehicle_classification/test
 vehicle_classification/val
