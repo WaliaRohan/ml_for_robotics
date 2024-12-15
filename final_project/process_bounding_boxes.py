@@ -222,7 +222,7 @@ def plot_bbox(frame, height, resized=False, target_class_id = "-2"):
 
     # Draw bounding boxes
     for bbox, class_id, roi in vboxes:
-        if class_id is not -1 and class_id == target_class_id:
+        if class_id != -1 and class_id == target_class_id:
             x0, y0, x1, y1 = bbox
             # Draw rectangle
             cv2.rectangle(image, (x0, y0), (x1, y1), (255, 0, 0), 2)  # Blue box with thickness 2
@@ -337,7 +337,7 @@ if __name__ == "__main__":
     plot = args.plot
 
     # process batch of images
-    if frame == -1:
+    if frame == "-1":
         image_range = range(0, 2999)  # Change range as needed
         data_folder = "syndrone_data/Town01_Opt_120_color/Town01_Opt_120/ClearNoon/"
 
