@@ -4,6 +4,7 @@ __pycache__/
 runs*/
 final_project/dataset
 final_project/syndrone_data
+final_project/yolo_env/
 vehicle_classification/train
 vehicle_classification/test
 vehicle_classification/val
