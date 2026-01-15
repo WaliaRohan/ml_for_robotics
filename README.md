@@ -21,8 +21,3 @@ An LSTM-based model for generating dynamically feasible 3D Dubins trajectories u
 ## Technologies
 
 Python, PyTorch, ROS / ROS 2, MATLAB, Linux, Docker, Git
-
-## Author
-
-Rohan Walia
-GitHub: [https://github.com/WaliaRohan](https://github.com/WaliaRohan)
