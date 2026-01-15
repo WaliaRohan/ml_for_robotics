@@ -10,9 +10,13 @@ The work emphasizes learning-based control, trajectory generation, and robotics-
 
 A learning-based control allocation framework for dynamic positioning of autonomous ships. Implements an encoder–decoder neural network that maps desired force/moment commands to thruster inputs while respecting actuator limits and minimizing power consumption.
 
+location: control_allocation/src
+
 ### LSTM-Based Trajectory Generation
 
 An LSTM-based model for generating dynamically feasible 3D Dubins trajectories using only initial pose, goal position, and climb angle. Trained on a large synthetic dataset of variable-length trajectories to produce smooth, constraint-aware paths.
+
+location: trajectory_prediction
 
 ## Repository Structure
 
